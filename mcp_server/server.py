@@ -311,6 +311,60 @@ def open_capture(capture_path: str) -> dict:
     return bridge.call("open_capture", {"capture_path": capture_path})
 
 
+@mcp.tool
+def run_python_shell(code: str, run_on_replay_thread: bool = False) -> dict:
+    """
+    Execute Python code inside the RenderDoc extension process.
+
+    The shell keeps session state across calls and exposes:
+    - ctx: RenderDoc CaptureContext
+    - facade: RenderDocFacade helper object
+    - invoke(callback): marshal a callback onto the replay thread
+    - rd: renderdoc module (when available)
+    - qrd: qrenderdoc module (when available)
+
+    Args:
+        code: Python code to execute. If the final statement is an expression,
+              its value is returned.
+        run_on_replay_thread: Execute the whole snippet via BlockInvoke when
+              the code needs direct replay-controller access.
+
+    Returns stdout/stderr, final result, result type, timing, and traceback on failure.
+    """
+    return bridge.call(
+        "run_python_shell",
+        {"code": code, "run_on_replay_thread": run_on_replay_thread},
+    )
+
+
+@mcp.tool
+def run_python_script(
+    script_path: str,
+    script_args: list[str] | None = None,
+    run_on_replay_thread: bool = False,
+) -> dict:
+    """
+    Execute a Python script file inside the RenderDoc extension process.
+
+    The script runs with the same helper bindings as run_python_shell:
+    - ctx: RenderDoc CaptureContext
+    - facade: RenderDocFacade helper object
+    - invoke(callback): marshal a callback onto the replay thread
+    - rd: renderdoc module (when available)
+    - qrd: qrenderdoc module (when available)
+    - script_args: list[str] passed to the script
+
+    To return structured data, set __mcp_result__ or result in the script.
+    """
+    params: dict[str, object] = {
+        "script_path": script_path,
+        "run_on_replay_thread": run_on_replay_thread,
+    }
+    if script_args is not None:
+        params["script_args"] = script_args
+    return bridge.call("run_python_script", params)
+
+
 def main():
     """Run the MCP server"""
     mcp.run()

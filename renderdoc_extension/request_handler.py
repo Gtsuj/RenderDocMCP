@@ -28,6 +28,8 @@ class RequestHandler:
             "get_pipeline_state": self._handle_get_pipeline_state,
             "list_captures": self._handle_list_captures,
             "open_capture": self._handle_open_capture,
+            "run_python_shell": self._handle_run_python_shell,
+            "run_python_script": self._handle_run_python_script,
         }
 
     def handle(self, request):
@@ -183,3 +185,24 @@ class RequestHandler:
         if capture_path is None:
             raise ValueError("capture_path is required")
         return self.facade.open_capture(capture_path)
+
+    def _handle_run_python_shell(self, params):
+        """Handle run_python_shell request"""
+        code = params.get("code")
+        if code is None:
+            raise ValueError("code is required")
+        run_on_replay_thread = params.get("run_on_replay_thread", False)
+        return self.facade.run_python_shell(code, bool(run_on_replay_thread))
+
+    def _handle_run_python_script(self, params):
+        """Handle run_python_script request"""
+        script_path = params.get("script_path")
+        if script_path is None:
+            raise ValueError("script_path is required")
+        script_args = params.get("script_args")
+        run_on_replay_thread = params.get("run_on_replay_thread", False)
+        return self.facade.run_python_script(
+            script_path,
+            script_args,
+            bool(run_on_replay_thread),
+        )

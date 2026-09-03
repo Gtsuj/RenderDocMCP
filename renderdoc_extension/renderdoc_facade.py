@@ -10,6 +10,7 @@ from .services import (
     SearchService,
     ResourceService,
     PipelineService,
+    PythonShellService,
 )
 
 
@@ -40,6 +41,7 @@ class RenderDocFacade:
         self._search = SearchService(ctx, self._invoke)
         self._resource = ResourceService(ctx, self._invoke)
         self._pipeline = PipelineService(ctx, self._invoke)
+        self._python_shell = PythonShellService(ctx, self._invoke, self)
 
     def _invoke(self, callback):
         """Invoke callback on replay thread via BlockInvoke"""
@@ -135,3 +137,17 @@ class RenderDocFacade:
     def get_pipeline_state(self, event_id):
         """Get full pipeline state at an event"""
         return self._pipeline.get_pipeline_state(event_id)
+
+    # ==================== Python Shell ====================
+
+    def run_python_shell(self, code, run_on_replay_thread=False):
+        """Execute Python snippets inside the RenderDoc extension process."""
+        return self._python_shell.run_python_shell(code, run_on_replay_thread)
+
+    def run_python_script(self, script_path, script_args=None, run_on_replay_thread=False):
+        """Execute a Python script file inside the RenderDoc extension process."""
+        return self._python_shell.run_python_script(
+            script_path,
+            script_args,
+            run_on_replay_thread,
+        )

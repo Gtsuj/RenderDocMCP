@@ -3,9 +3,13 @@ RenderDoc MCP Bridge Extension
 Provides socket server for external MCP server communication.
 """
 
+import importlib
+
 from . import socket_server
 from . import request_handler
 from . import renderdoc_facade
+from . import services
+from .services import python_shell_service
 
 # Global state
 _context = None
@@ -32,6 +36,14 @@ def register(version, ctx):
     global _context, _server, _version
     _version = version
     _context = ctx
+
+    # qrenderdoc can keep Python submodules cached across extension reloads.
+    # Force-refresh the bridge implementation so Manage Extensions reloads
+    # pick up changes without restarting qrenderdoc.
+    importlib.reload(services)
+    importlib.reload(python_shell_service)
+    importlib.reload(renderdoc_facade)
+    importlib.reload(request_handler)
 
     # Create facade and handler
     facade = renderdoc_facade.RenderDocFacade(ctx)
